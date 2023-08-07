@@ -41,7 +41,7 @@ def create_user():
         return jsonify({'Message': 'Empty spaces not allowed'}), 400
 
     if Login.query.filter_by(username=username).first():
-        return jsonify({'Message': f'Username {username} is already exists!.Try again.'}), 409
+        return jsonify({'Message': f'Username {username} is already exists!.Please try again.'}), 409
 
     new_user = Login(username=username, password=hashed_password)
     db.session.add(new_user)
@@ -60,12 +60,25 @@ def login():
     return jsonify({'Message': 'Login successful'}), 200
 
 
+@app.route('/getDetails/<int:id>', methods=['GET'])
+def get_details(id):
+    details = Login.query.get(id)
+
+    if not details:
+        return jsonify({'Message': f'User details not found for id {id}'}), 400
+    user_details = {
+        'Username': details.username,
+        'Password': details.password
+    }
+    return jsonify(user_details), 200
+
+
 @app.route('/update_user/<int:id>', methods=['PUT'])
 def update_user(id):
     user = Login.query.get(id)
 
     if not user:
-        return jsonify({'Message': f'User with id {id} not found'}), 404
+        return jsonify({'Message': f'User id {id} not found'}), 404
     new_username = request.json.get('username')
     new_password = request.json.get('password')
 
@@ -81,17 +94,17 @@ def update_user(id):
         hashed_password = generate_password_hash(new_password)
         user.password = hashed_password
     db.session.commit()
-    return jsonify({'Message': f'User with id {id} has been updated successfully'})
+    return jsonify({'Message': f'User id {id} has been updated successfully'})
 
 
 @app.route('/delete/<int:id>', methods=['DELETE'])
 def delete_user(id):
     user = Login.query.get(id)
     if not user:
-        return jsonify({'Message': f'User with id {id} not found'}), 404
+        return jsonify({'Message': f'User id {id} not found'}), 404
     db.session.delete(user)
     db.session.commit()
-    return jsonify({'Message': f'User with id {id} has been deleted successfully'}), 200
+    return jsonify({'Message': f'User id {id} has been deleted successfully'}), 200
 
 
 if __name__ == '__main__':

@@ -94,10 +94,12 @@ def delete_job(id):
     job = JobRegister.query.get(id)
 
     if not job:
-        return jsonify({'Message': f'There is no job available to delete the id number {id}'})
+        return jsonify({'Message': f'There is no job available to delete the id number {id}'}), 200
     db.session.delete(job)
     db.session.commit()
-    return jsonify(job)
+    return jsonify({'Message': f'Job deleted successfully'}), 200
+
+
 
 
 if __name__ == '__main__':
