@@ -47,9 +47,9 @@ def register_job():
     job_description = request.json['job_description']
     job_responsibilities = request.json['job_responsibilities']
 
-    if not job_title and not organization and not job_category:
+    if not job_title or not organization or not job_category:
         return jsonify({'Message': 'Mandatory fields not filled'})
-    if not experience and not vacancy and not job_description:
+    if not experience or not vacancy or not job_description:
         return jsonify({'Message': 'Mandatory fields not filled'})
 
     new_job = JobRegister(job_title=job_title, organization=organization, job_category=job_category,
@@ -89,18 +89,63 @@ def get_job_details(id):
     return jsonify(job_data), 200
 
 
+@app.route('/update_job/<int:id>', methods=['PUT'])
+def job_update(id):
+    update = JobRegister.query.get(id)
+
+    job_title = request.json['job_title']
+    organization = request.json['organization']
+    job_category = request.json['job_category']
+    employment_type = request.json['employment_type']
+    priority = request.json['priority']
+    level = request.json['level']
+    experience = request.json['experience']
+    currency = request.json['currency']
+    compensation_range = request.json['compensation_range']
+    major_skills = request.json['major_skills']
+    minor_skills = request.json['minor_skills']
+    vacancy = request.json['vacancy']
+    job_description = request.json['job_description']
+    job_responsibilities = request.json['job_responsibilities']
+
+    if not job_title or not organization or not job_category:
+        return jsonify({'Message': 'Mandatory fields not filled'})
+    if not experience or not vacancy or not job_description:
+        return jsonify({'Message': 'Mandatory fields not filled'})
+    if not update:
+        return jsonify({'Message': f'Job not available for Id {id}'}), 200
+
+    update.job_title = job_title
+    update.organization = organization
+    update.job_category = job_category
+    update.employment_type = employment_type
+    update.priority = priority
+    update.level = level
+    update.experience = experience
+    update.currency = currency
+    update.compensation_range = compensation_range
+    update.major_skills = major_skills
+    update.minor_skills = minor_skills
+    update.vacancy = vacancy
+    update.job_description = job_description
+    update.job_responsibilities = job_responsibilities
+
+    db.session.commit()
+
+    return jsonify({'Message': f'Job updated successfully'}), 200
+
+
 @app.route('/delete_job/<int:id>', methods=['DELETE'])
 def delete_job(id):
     job = JobRegister.query.get(id)
 
     if not job:
-        return jsonify({'Message': f'There is no job available to delete the id number {id}'}), 200
+        return jsonify({'Message': f'There is no job available for Id number {id}'}), 200
     db.session.delete(job)
     db.session.commit()
     return jsonify({'Message': f'Job deleted successfully'}), 200
 
 
-
-
 if __name__ == '__main__':
     app.run(debug=True)
+    
