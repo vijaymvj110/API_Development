@@ -1,11 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 app = Flask(__name__)
 
+app.config['SECRET_KEY'] = 'pass@123'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost/app_develop'
+app.config['JWT_SECRET_KEY'] = 'jwt-secret-key'
 db = SQLAlchemy(app)
+jwt = JWTManager(app)
 
 
 class Login(db.Model):
@@ -13,8 +17,8 @@ class Login(db.Model):
     username = db.Column(db.String(30, collation='utf8_bin'), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False, unique=True)
 
-    def __repr__(self):
-        return f"Login({self.username})"
+    def get_id(self):
+        return self.id
 
 
 with app.app_context():
@@ -49,15 +53,25 @@ def create_user():
     return jsonify({'Message': f'Username {username} is created successfully'}), 201
 
 
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['POST'])
 def login():
     username = request.json['username']
     password = request.json['password']
 
     user = Login.query.filter_by(username=username).first()
+
     if not user or not check_password_hash(user.password, password):
         return jsonify({'Message': 'Invalid User name or password'}), 401
-    return jsonify({'Message': 'Login successful'}), 200
+    else:
+        access_token = create_access_token(identity=user.username)
+        return jsonify({'access_token': access_token}), 200
+
+
+@app.route('/protected', methods=['GET'])
+@jwt_required()
+def protected_route():
+    current_user = get_jwt_identity()
+    return jsonify({'Message': f'Welcome ,{current_user}!This is a protected route.'}), 200
 
 
 @app.route('/getDetails/<int:id>', methods=['GET'])
